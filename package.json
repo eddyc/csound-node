@@ -7,7 +7,7 @@
         "audioworklet-polyfill": "^1.1.2"
     },
     "scripts": {
-        "start": "react-scripts start",
+        "start": "HTTPS=true react-scripts start",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
         "build": "rimraf dist && NODE_ENV=production babel src/wasm/Csound.js --extensions \".js\"  --copy-files --ignore __tests__,spec.js,test.js,__snapshots__ -o dist/index.js && cp src/wasm/types.js dist/types.js"

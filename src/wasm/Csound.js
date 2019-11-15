@@ -1,18 +1,22 @@
 import raw from "raw.macro";
-import types, {
+import types from "./types";
+import "audioworklet-polyfill";
+const libcsound = raw("./libcsound.js");
+const CsoundWorklet = raw("./CsoundWorklet.js");
+const CsoundObj = raw("./CsoundObj.js");
+const {
     COMPILE_CSD,
     START_PERFORMANCE,
     WRITE_TO_FS,
     UNLINK_FROM_FS,
     CSOUND_INITIALIZED,
     SET_OUTPUT_CHANNEL_CALLBACK,
+    SET_INPUT_CHANNEL_CALLBACK,
     SEND_OUTPUT_CHANNEL_VALUE,
-    SEND_MIDI_MESSAGE
-} from "./types";
-import "audioworklet-polyfill";
-const libcsound = raw("./libcsound.js");
-const CsoundWorklet = raw("./CsoundWorklet.js");
-const CsoundObj = raw("./CsoundObj.js");
+    SEND_MIDI_MESSAGE,
+    SET_CONTROL_CHANNEL,
+    SET_INPUT_CHANNEL_VALUE
+} = types;
 
 export default () =>
     new Promise(async (resolve, reject) => {
@@ -65,10 +69,27 @@ export default () =>
                     payload: path
                 });
             },
+            setControlChannel: (name, value) => {
+                csoundNode.port.postMessage({
+                    type: SET_CONTROL_CHANNEL,
+                    payload: { name, value }
+                });
+            },
             setOutputChannelCallback: (name, callback) => {
                 outputChannelCallbacks[name] = callback;
                 csoundNode.port.postMessage({
                     type: SET_OUTPUT_CHANNEL_CALLBACK
+                });
+            },
+            setInputChannelCallback: () => {
+                csoundNode.port.postMessage({
+                    type: SET_INPUT_CHANNEL_CALLBACK
+                });
+            },
+            setInputChannelValue: (name, value) => {
+                csoundNode.port.postMessage({
+                    type: SET_INPUT_CHANNEL_VALUE,
+                    payload: { name, value }
                 });
             },
             initializeMidi: () =>

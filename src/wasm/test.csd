@@ -12,8 +12,9 @@ nchnls = 2
 instr 1
     aout vco2 0.1, 440
     kphasor phasor 1
-
+    kc invalue "channel"
     outs kphasor * aout, (1 - kphasor) * aout
+    printk2 kc
     outvalue "phasor", kphasor
 endin
 

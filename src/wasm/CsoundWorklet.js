@@ -36,9 +36,11 @@ class CsoundWorklet extends AudioWorkletProcessor {
             START_PERFORMANCE,
             SET_OUTPUT_CHANNEL_CALLBACK,
             SEND_OUTPUT_CHANNEL_VALUE,
+            SET_INPUT_CHANNEL_CALLBACK,
+            SET_INPUT_CHANNEL_VALUE,
+            SET_CONTROL_CHANNEL,
             SEND_MIDI_MESSAGE
         } = this.types;
-
         switch (type) {
             case COMPILE_CSD: {
                 this.csound.compileCsd(payload);
@@ -46,6 +48,16 @@ class CsoundWorklet extends AudioWorkletProcessor {
             }
             case START_PERFORMANCE: {
                 this.csound.start();
+                break;
+            }
+            case SET_CONTROL_CHANNEL: {
+                const { name, value } = payload;
+                this.csound.setControlChannel(name, value);
+                break;
+            }
+            case SET_INPUT_CHANNEL_VALUE: {
+                const { name, value } = payload;
+                this.csound.setInputChannelValue(name, value);
                 break;
             }
             case SET_OUTPUT_CHANNEL_CALLBACK: {
@@ -60,6 +72,11 @@ class CsoundWorklet extends AudioWorkletProcessor {
             case SEND_MIDI_MESSAGE: {
                 const [status, data1, data2] = payload;
                 this.csound.pushMidiMessage(status, data1, data2);
+                break;
+            }
+
+            case SET_INPUT_CHANNEL_CALLBACK: {
+                this.csound.setInputChannelCallback();
                 break;
             }
             default: {
