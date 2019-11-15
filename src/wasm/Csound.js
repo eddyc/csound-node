@@ -6,7 +6,8 @@ import types, {
     UNLINK_FROM_FS,
     CSOUND_INITIALIZED,
     SET_OUTPUT_CHANNEL_CALLBACK,
-    SEND_OUTPUT_CHANNEL_VALUE
+    SEND_OUTPUT_CHANNEL_VALUE,
+    SEND_MIDI_MESSAGE
 } from "./types";
 import "audioworklet-polyfill";
 const libcsound = raw("./libcsound.js");
@@ -36,8 +37,8 @@ export default () =>
 
         csoundNode.port.start();
         csoundNode.connect(actx.destination);
-        const outputChannelCallbacks = {};
         await actx.suspend();
+        const outputChannelCallbacks = {};
         const csound = {
             compileCsd: csd => {
                 csoundNode.port.postMessage({
@@ -69,7 +70,36 @@ export default () =>
                 csoundNode.port.postMessage({
                     type: SET_OUTPUT_CHANNEL_CALLBACK
                 });
-            }
+            },
+            initializeMidi: () =>
+                new Promise((resolve, reject) => {
+                    if (navigator.requestMIDIAccess) {
+                        navigator.requestMIDIAccess().then(
+                            midiInterface => {
+                                const inputs = midiInterface.inputs.values();
+
+                                for (
+                                    let input = inputs.next();
+                                    input && !input.done;
+                                    input = inputs.next()
+                                ) {
+                                    input = input.value;
+                                    input.onmidimessage = ({ data }) => {
+                                        csoundNode.port.postMessage({
+                                            type: SEND_MIDI_MESSAGE,
+                                            payload: data
+                                        });
+                                    };
+                                }
+                                resolve(true);
+                            },
+                            () => reject(false)
+                        );
+                    } else {
+                        console.log("MIDI not supported in this browser");
+                        reject(false);
+                    }
+                })
         };
 
         csoundNode.port.onmessage = message => {

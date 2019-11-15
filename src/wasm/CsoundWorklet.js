@@ -35,7 +35,8 @@ class CsoundWorklet extends AudioWorkletProcessor {
             COMPILE_CSD,
             START_PERFORMANCE,
             SET_OUTPUT_CHANNEL_CALLBACK,
-            SEND_OUTPUT_CHANNEL_VALUE
+            SEND_OUTPUT_CHANNEL_VALUE,
+            SEND_MIDI_MESSAGE
         } = this.types;
 
         switch (type) {
@@ -54,6 +55,11 @@ class CsoundWorklet extends AudioWorkletProcessor {
                         payload: { name, value }
                     });
                 });
+                break;
+            }
+            case SEND_MIDI_MESSAGE: {
+                const [status, data1, data2] = payload;
+                this.csound.pushMidiMessage(status, data1, data2);
                 break;
             }
             default: {
