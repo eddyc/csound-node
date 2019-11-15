@@ -11,7 +11,9 @@ nchnls = 2
 
 instr 1
     aout vco2 0.1, 440
-    outs aout, aout
+    kphasor phasor 1
+
+    outs kphasor * aout, (1 - kphasor) * aout
 endin
 
 schedule(1, 0, -1)

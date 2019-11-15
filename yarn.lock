@@ -1932,6 +1932,14 @@ audioworklet-polyfill@^1.1.2:
   resolved "https://registry.yarnpkg.com/audioworklet-polyfill/-/audioworklet-polyfill-1.1.2.tgz#3bc15fe197a8255e33f599c4f01d25cbe70db7f6"
   integrity sha512-W6GpXVksUuT6/PTAFosLg98yU0wvCYBltNjgsAse3GCL8VFlZNnqTztvQ4Z0ZXg34olw/zHXjXnNX/0Q/kyapA==
 
+automation-events@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/automation-events/-/automation-events-1.0.6.tgz#4966b5d4838cf02d05e1ff63301412436fb0d9da"
+  integrity sha512-uo7Cn4755zs26uPvFaAa4gUWv5IkBwiOoLH3Cc1KYS9A+NzmfbpN2AO2ycJ1/9V7yBd+4uaIoVewnQpO57TaWg==
+  dependencies:
+    "@babel/runtime" "^7.7.2"
+    tslib "^1.10.0"
+
 autoprefixer@^9.6.1:
   version "9.6.1"
   resolved "https://registry.yarnpkg.com/autoprefixer/-/autoprefixer-9.6.1.tgz#51967a02d2d2300bb01866c1611ec8348d355a47"
@@ -9115,6 +9123,15 @@ stack-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/stack-utils/-/stack-utils-1.0.2.tgz#33eba3897788558bebfc2db059dc158ec36cebb8"
   integrity sha512-MTX+MeG5U994cazkjd/9KNAapsHnibjMLnfXodlkXw76JEea0UiNzrqidzo1emMwk7w5Qhc9jd4Bn9TBb1MFwA==
 
+standardized-audio-context@^23.0.0:
+  version "23.0.0"
+  resolved "https://registry.yarnpkg.com/standardized-audio-context/-/standardized-audio-context-23.0.0.tgz#2ff78ed003596d4895aadd12d2d1db5851104dfa"
+  integrity sha512-FMHupb3FqaRu5Qz4ZK4aFbOYa/JSzvy+dftlC4e8/rlcEU80Ooz/FQwnrgE8AXocMS5l0Ge0RMRyNt6Y2po0fw==
+  dependencies:
+    "@babel/runtime" "^7.7.2"
+    automation-events "^1.0.6"
+    tslib "^1.10.0"
+
 static-extend@^0.1.1:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/static-extend/-/static-extend-0.1.2.tgz#60809c39cbff55337226fd5e0b520f341f1fb5c6"
@@ -9547,7 +9564,7 @@ ts-pnp@1.1.4, ts-pnp@^1.1.2:
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.1.4.tgz#ae27126960ebaefb874c6d7fa4729729ab200d90"
   integrity sha512-1J/vefLC+BWSo+qe8OnJQfWTYRS6ingxjwqmHMqaMxXMj7kFtKLgAaYW3JeX3mktjgUL+etlU8/B4VUAUI9QGw==
 
-tslib@^1.8.1, tslib@^1.9.0:
+tslib@^1.10.0, tslib@^1.8.1, tslib@^1.9.0:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
   integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==

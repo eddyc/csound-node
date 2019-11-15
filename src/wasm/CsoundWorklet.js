@@ -2,28 +2,28 @@
 
 class CsoundWorklet extends AudioWorkletProcessor {
     constructor(options) {
-        super();
+        super(options);
 
         this.port.onmessage = this.onMessage.bind(this);
 
-        this.CSMOD = {
-            print: this.printMessages,
-            printErr: this.printMessages,
-            ENVIRONMENT: "WEB"
-        };
-
-        libcsound(this.CSMOD);
         const { types, sampleRate } = options.processorOptions;
 
-        this.csound = new CsoundObj(
-            this.CSMOD,
-            options.numberOfOutputs || 1,
-            options.numberOfInputs || 1,
-            sampleRate
-        );
-        this.types = types;
-        this.port.start();
-        this.port.postMessage({ type: this.types.CSOUND_INITIALIZED });
+        libcsound({
+            print:this.printMessages,
+            printErr:this.printMessages
+        }).then(CSMOD => {
+
+            
+            this.csound = new CsoundObj(
+                CSMOD,
+                options.outputChannelCount[0],
+                options.numberOfInputs,
+                sampleRate
+            );
+            this.types = types;
+            this.port.start();
+            this.port.postMessage({ type: this.types.CSOUND_INITIALIZED });
+        });
     }
 
     printMessages(e) {

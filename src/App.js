@@ -15,6 +15,8 @@ class App extends React.Component {
     initialise = async () => {
         const csound = await Csound();
         this.setState({ csound });
+        // const cs = libcsound();
+        // console.log(cs);
     };
 
     render() {
