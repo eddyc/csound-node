@@ -3,7 +3,10 @@ import types, {
     COMPILE_CSD,
     START_PERFORMANCE,
     WRITE_TO_FS,
-    UNLINK_FROM_FS
+    UNLINK_FROM_FS,
+    CSOUND_INITIALIZED,
+    SET_OUTPUT_CHANNEL_CALLBACK,
+    SEND_OUTPUT_CHANNEL_VALUE
 } from "./types";
 import "audioworklet-polyfill";
 const libcsound = raw("./libcsound.js");
@@ -32,14 +35,10 @@ export default () =>
         });
 
         csoundNode.port.start();
-        csoundNode.port.onmessage = message => {
-            console.log(message);
-        };
-
         csoundNode.connect(actx.destination);
+        const outputChannelCallbacks = {};
         await actx.suspend();
-
-        resolve({
+        const csound = {
             compileCsd: csd => {
                 csoundNode.port.postMessage({
                     type: COMPILE_CSD,
@@ -64,6 +63,30 @@ export default () =>
                     type: UNLINK_FROM_FS,
                     payload: path
                 });
+            },
+            setOutputChannelCallback: (name, callback) => {
+                outputChannelCallbacks[name] = callback;
+                csoundNode.port.postMessage({
+                    type: SET_OUTPUT_CHANNEL_CALLBACK
+                });
             }
-        });
+        };
+
+        csoundNode.port.onmessage = message => {
+            const { type, payload } = message.data;
+            switch (type) {
+                case CSOUND_INITIALIZED: {
+                    resolve(csound);
+                    break;
+                }
+                case SEND_OUTPUT_CHANNEL_VALUE: {
+                    const { name, value } = payload;
+                    outputChannelCallbacks[name](value);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        };
     });

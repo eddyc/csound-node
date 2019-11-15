@@ -76,6 +76,21 @@ class CsoundObj {
             setControlChannel(csObj, channel, value);
         };
 
+        const setOutputChannelCallback = CSMOD.cwrap(
+            "CsoundObj_setOutputChannelCallback",
+            null,
+            ["number", "number"]
+        );
+        this.setOutputChannelCallback = callback => {
+            function csoundCallback(csoundPtr, stringPtr, valuePtr, typePtr) {
+                const name = CSMOD.UTF8ToString(stringPtr);
+                const value = CSMOD.getValue(valuePtr, "float");
+                callback(name, value);
+            }
+            const functionPointer = CSMOD.addFunction(csoundCallback, "viiii");
+            setOutputChannelCallback(csObj, functionPointer);
+        };
+
         const getStringChannel = CSMOD.cwrap(
             "CsoundObj_getStringChannel",
             ["string"],

@@ -14,6 +14,7 @@ instr 1
     kphasor phasor 1
 
     outs kphasor * aout, (1 - kphasor) * aout
+    outvalue "phasor", kphasor
 endin
 
 schedule(1, 0, -1)

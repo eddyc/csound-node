@@ -14,6 +14,7 @@ class App extends React.Component {
 
     initialise = async () => {
         const csound = await Csound();
+        csound.setOutputChannelCallback("phasor", value => console.log(value));
         this.setState({ csound });
         // const cs = libcsound();
         // console.log(cs);
