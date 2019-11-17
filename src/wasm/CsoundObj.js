@@ -63,6 +63,8 @@ class CsoundObj {
         );
 
         this.getControlChannel = channel => {
+            console.log(channel);
+
             return getControlChannel(csObj, channel);
         };
 
@@ -119,7 +121,8 @@ class CsoundObj {
         );
 
         this.getStringChannel = channel => {
-            return getStringChannel(csObj, channel);
+            const pointer = getStringChannel(csObj, channel);
+            return CSMOD.UTF8ToString(pointer);
         };
 
         const setStringChannel = CSMOD.cwrap(

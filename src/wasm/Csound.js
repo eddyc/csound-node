@@ -14,8 +14,22 @@ const {
     SET_INPUT_CHANNEL_CALLBACK,
     SEND_OUTPUT_CHANNEL_VALUE,
     SEND_MIDI_MESSAGE,
+    SET_INPUT_CHANNEL_VALUE,
     SET_CONTROL_CHANNEL,
-    SET_INPUT_CHANNEL_VALUE
+    GET_CONTROL_CHANNEL,
+    SET_STRING_CHANNEL,
+    GET_STRING_CHANNEL,
+    EVALUATE_CODE,
+    READ_SCORE,
+    GET_INPUT_CHANNEL_COUNT,
+    GET_OUTPUT_CHANNEL_COUNT,
+    GET_TABLE_LENGTH,
+    GET_TABLE,
+    SET_TABLE,
+    GET_ZERODBFS,
+    COMPILE_ORC,
+    PREPARE_RT,
+    GET_SCORE_TIME
 } = types;
 
 export default () =>
@@ -28,7 +42,14 @@ export default () =>
             }
         );
         const url = URL.createObjectURL(blob);
-        await actx.audioWorklet.addModule(url);
+        try {
+            await actx.audioWorklet.addModule(url);
+        } catch (e) {
+            console.error(
+                "Csound could not be instantiated. AudioWorklet.addModule Error: " +
+                    e
+            );
+        }
         const csoundNode = new AudioWorkletNode(actx, "csound", {
             processorOptions: {
                 sampleRate: actx.sampleRate,
@@ -43,6 +64,7 @@ export default () =>
         csoundNode.connect(actx.destination);
         await actx.suspend();
         const outputChannelCallbacks = {};
+        const getControlChannelResponse = {};
         const csound = {
             compileCsd: csd => {
                 csoundNode.port.postMessage({
@@ -75,6 +97,28 @@ export default () =>
                     payload: { name, value }
                 });
             },
+            setStringChannel: (name, value) => {
+                csoundNode.port.postMessage({
+                    type: SET_STRING_CHANNEL,
+                    payload: { name, value }
+                });
+            },
+            getControlChannel: name =>
+                new Promise((resolve, reject) => {
+                    outputChannelCallbacks[name] = resolve;
+                    csoundNode.port.postMessage({
+                        type: GET_CONTROL_CHANNEL,
+                        payload: name
+                    });
+                }),
+            getStringChannel: name =>
+                new Promise((resolve, reject) => {
+                    outputChannelCallbacks[name] = resolve;
+                    csoundNode.port.postMessage({
+                        type: GET_STRING_CHANNEL,
+                        payload: name
+                    });
+                }),
             setOutputChannelCallback: (name, callback) => {
                 outputChannelCallbacks[name] = callback;
                 csoundNode.port.postMessage({
@@ -114,10 +158,16 @@ export default () =>
                                 }
                                 resolve(true);
                             },
-                            () => reject(false)
+                            () => {
+                                console.error(
+                                    "MIDI is supported in this browser but could not initialize access."
+                                );
+
+                                reject(false);
+                            }
                         );
                     } else {
-                        console.log("MIDI not supported in this browser");
+                        console.error("MIDI not supported in this browser");
                         reject(false);
                     }
                 })
@@ -127,12 +177,17 @@ export default () =>
             const { type, payload } = message.data;
             switch (type) {
                 case CSOUND_INITIALIZED: {
+                    csound.setInputChannelCallback();
                     resolve(csound);
                     break;
                 }
-                case SEND_OUTPUT_CHANNEL_VALUE: {
+                case SEND_OUTPUT_CHANNEL_VALUE:
+                case GET_STRING_CHANNEL:
+                case GET_CONTROL_CHANNEL: {
                     const { name, value } = payload;
-                    outputChannelCallbacks[name](value);
+                    if (outputChannelCallbacks[name]) {
+                        outputChannelCallbacks[name](value);
+                    }
                     break;
                 }
                 default: {

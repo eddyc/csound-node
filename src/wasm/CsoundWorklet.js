@@ -39,7 +39,12 @@ class CsoundWorklet extends AudioWorkletProcessor {
             SET_INPUT_CHANNEL_CALLBACK,
             SET_INPUT_CHANNEL_VALUE,
             SET_CONTROL_CHANNEL,
-            SEND_MIDI_MESSAGE
+            SEND_MIDI_MESSAGE,
+            GET_CONTROL_CHANNEL,
+            SET_STRING_CHANNEL,
+            GET_STRING_CHANNEL,
+            EVALUATE_CODE,
+            READ_SCORE
         } = this.types;
         switch (type) {
             case COMPILE_CSD: {
@@ -53,6 +58,29 @@ class CsoundWorklet extends AudioWorkletProcessor {
             case SET_CONTROL_CHANNEL: {
                 const { name, value } = payload;
                 this.csound.setControlChannel(name, value);
+                break;
+            }
+            case SET_STRING_CHANNEL: {
+                const { name, value } = payload;
+                this.csound.setStringChannel(name, value);
+                break;
+            }
+            case GET_CONTROL_CHANNEL: {
+                const name = payload;
+                const value = this.csound.getControlChannel(name);
+                this.port.postMessage({
+                    type: GET_CONTROL_CHANNEL,
+                    payload: { name, value }
+                });
+                break;
+            }
+            case GET_STRING_CHANNEL: {
+                const name = payload;
+                const value = this.csound.getStringChannel(name);
+                this.port.postMessage({
+                    type: GET_STRING_CHANNEL,
+                    payload: { name, value }
+                });
                 break;
             }
             case SET_INPUT_CHANNEL_VALUE: {

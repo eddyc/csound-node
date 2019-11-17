@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Csound from "./wasm/Csound";
 import "./App.css";
 import raw from "raw.macro";
+import { log } from "util";
 const csdFile = raw("./wasm/test.csd");
 
 const App = props => {
@@ -10,8 +11,6 @@ const App = props => {
     useEffect(() => {
         (async () => {
             const csound = await Csound();
-            csound.setInputChannelCallback();
-
             csound.setOutputChannelCallback(
                 "phasor",
                 value => {}
@@ -30,6 +29,19 @@ const App = props => {
                     <button onClick={() => csound.start()}>Start</button>
                     <button onClick={() => csound.compileCsd(csdFile)}>
                         Compile
+                    </button>
+                    <button
+                        onClick={async () => {
+                            const value = await csound.getControlChannel(
+                                "kval"
+                            );
+                            const string = await csound.getStringChannel(
+                                "kstring"
+                            );
+                            console.log(value, string);
+                        }}
+                    >
+                        Get Value
                     </button>
                     <input
                         type="range"
