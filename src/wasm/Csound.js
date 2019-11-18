@@ -23,13 +23,13 @@ const {
     READ_SCORE,
     GET_INPUT_CHANNEL_COUNT,
     GET_OUTPUT_CHANNEL_COUNT,
+    GET_ZERODBFS,
+    GET_SCORE_TIME,
     GET_TABLE_LENGTH,
     GET_TABLE,
+    SET_TABLE_AT_INDEX,
     SET_TABLE,
-    GET_ZERODBFS,
-    COMPILE_ORC,
-    PREPARE_RT,
-    GET_SCORE_TIME
+    COMPILE_ORC
 } = types;
 
 export default () =>
@@ -64,7 +64,11 @@ export default () =>
         csoundNode.connect(actx.destination);
         await actx.suspend();
         const outputChannelCallbacks = {};
-        const getControlChannelResponse = {};
+        const channelCountCallbacks = {};
+        const tableLengthCallbacks = {};
+        const tableDataCallbacks = {};
+        let scoreTimeCallbacks = {};
+        let zerodBFSCallbacks = {};
         const csound = {
             compileCsd: csd => {
                 csoundNode.port.postMessage({
@@ -73,11 +77,10 @@ export default () =>
                 });
             },
             start: () => {
+                actx.resume();
                 csoundNode.port.postMessage({
                     type: START_PERFORMANCE
                 });
-
-                actx.resume();
             },
             writeToFs: (path, blob) => {
                 csoundNode.port.postMessage({
@@ -170,7 +173,99 @@ export default () =>
                         console.error("MIDI not supported in this browser");
                         reject(false);
                     }
-                })
+                }),
+            compileOrc: orc => {
+                csoundNode.port.postMessage({
+                    type: COMPILE_ORC,
+                    payload: orc
+                });
+            },
+            evaluateCode: code => {
+                csoundNode.port.postMessage({
+                    type: EVALUATE_CODE,
+                    payload: code
+                });
+            },
+            readScore: score => {
+                csoundNode.port.postMessage({
+                    type: READ_SCORE,
+                    payload: score
+                });
+            },
+            getInputChannelCount: () =>
+                new Promise((resolve, reject) => {
+                    channelCountCallbacks[GET_INPUT_CHANNEL_COUNT] = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_INPUT_CHANNEL_COUNT
+                    });
+                }),
+            getOutputChannelCount: () =>
+                new Promise((resolve, reject) => {
+                    channelCountCallbacks[GET_OUTPUT_CHANNEL_COUNT] = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_OUTPUT_CHANNEL_COUNT
+                    });
+                }),
+            getZeroDBFS: () =>
+                new Promise((resolve, reject) => {
+                    zerodBFSCallbacks = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_ZERODBFS
+                    });
+                }),
+            getScoreTime: () =>
+                new Promise((resolve, reject) => {
+                    scoreTimeCallbacks = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_SCORE_TIME
+                    });
+                }),
+            getTableLength: table =>
+                new Promise((resolve, reject) => {
+                    tableLengthCallbacks[table] = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_TABLE_LENGTH,
+                        payload: table
+                    });
+                }),
+            getTable: table =>
+                new Promise((resolve, reject) => {
+                    tableDataCallbacks[table] = {
+                        resolve,
+                        reject
+                    };
+                    csoundNode.port.postMessage({
+                        type: GET_TABLE,
+                        payload: table
+                    });
+                }),
+            setTableAtIndex: (table, index, value) => {
+                csoundNode.port.postMessage({
+                    type: SET_TABLE_AT_INDEX,
+                    payload: { table, index, value }
+                });
+            },
+            setTable: (table, tableData) => {
+                csoundNode.port.postMessage({
+                    type: SET_TABLE,
+                    payload: { table, tableData }
+                });
+            }
         };
 
         csoundNode.port.onmessage = message => {
@@ -187,6 +282,47 @@ export default () =>
                     const { name, value } = payload;
                     if (outputChannelCallbacks[name]) {
                         outputChannelCallbacks[name](value);
+                    }
+                    break;
+                }
+                case GET_INPUT_CHANNEL_COUNT:
+                case GET_OUTPUT_CHANNEL_COUNT: {
+                    const value = payload;
+                    if (channelCountCallbacks[type]) {
+                        const { resolve } = channelCountCallbacks[type];
+                        resolve(value);
+                    }
+                    break;
+                }
+                case GET_TABLE_LENGTH: {
+                    const { table, length } = payload;
+                    if (tableLengthCallbacks[table]) {
+                        const { resolve } = tableLengthCallbacks[table];
+                        resolve(length);
+                    }
+                    break;
+                }
+                case GET_TABLE: {
+                    const { table, tableData } = payload;
+                    if (tableDataCallbacks[table]) {
+                        const { resolve } = tableDataCallbacks[table];
+                        resolve(tableData);
+                    }
+                    break;
+                }
+                case GET_ZERODBFS: {
+                    const zeroDBFS = payload;
+                    if (zerodBFSCallbacks) {
+                        const { resolve } = zerodBFSCallbacks;
+                        resolve(zeroDBFS);
+                    }
+                    break;
+                }
+                case GET_SCORE_TIME: {
+                    const scoreTime = payload;
+                    if (scoreTimeCallbacks) {
+                        const { resolve } = scoreTimeCallbacks;
+                        resolve(scoreTime);
                     }
                     break;
                 }

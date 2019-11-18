@@ -197,7 +197,10 @@ class CsoundObj {
         );
 
         this.getTable = table => {
-            return getTable(csObj, table);
+            const buffer = getTable(csObj, table);
+            const length = this.getTableLength(table);
+            const src = new Float32Array(CSMOD.HEAP8.buffer, buffer, length);
+            return new Float32Array(src);
         };
 
         const getZerodBFS = CSMOD.cwrap(

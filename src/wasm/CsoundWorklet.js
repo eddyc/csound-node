@@ -44,7 +44,16 @@ class CsoundWorklet extends AudioWorkletProcessor {
             SET_STRING_CHANNEL,
             GET_STRING_CHANNEL,
             EVALUATE_CODE,
-            READ_SCORE
+            READ_SCORE,
+            GET_INPUT_CHANNEL_COUNT,
+            GET_OUTPUT_CHANNEL_COUNT,
+            GET_TABLE_LENGTH,
+            GET_TABLE,
+            SET_TABLE_AT_INDEX,
+            SET_TABLE,
+            GET_ZERODBFS,
+            COMPILE_ORC,
+            GET_SCORE_TIME
         } = this.types;
         switch (type) {
             case COMPILE_CSD: {
@@ -105,6 +114,83 @@ class CsoundWorklet extends AudioWorkletProcessor {
 
             case SET_INPUT_CHANNEL_CALLBACK: {
                 this.csound.setInputChannelCallback();
+                break;
+            }
+            case EVALUATE_CODE: {
+                const code = payload;
+                this.csound.evaluateCode(code);
+                break;
+            }
+            case COMPILE_ORC: {
+                const orc = payload;
+                this.csound.compileOrc(orc);
+                break;
+            }
+            case READ_SCORE: {
+                const score = payload;
+                this.csound.readScore(score);
+                break;
+            }
+            case GET_INPUT_CHANNEL_COUNT: {
+                const count = this.csound.getInputChannelCount();
+                this.port.postMessage({
+                    type: GET_INPUT_CHANNEL_COUNT,
+                    payload: count
+                });
+                break;
+            }
+            case GET_OUTPUT_CHANNEL_COUNT: {
+                const count = this.csound.getOutputChannelCount();
+                this.port.postMessage({
+                    type: GET_OUTPUT_CHANNEL_COUNT,
+                    payload: count
+                });
+                break;
+            }
+            case GET_TABLE_LENGTH: {
+                const table = payload;
+                const length = this.csound.getTableLength(table);
+                this.port.postMessage({
+                    type: GET_TABLE_LENGTH,
+                    payload: { table, length }
+                });
+                break;
+            }
+            case GET_TABLE: {
+                const table = payload;
+                const tableData = this.csound.getTable(table);
+                this.port.postMessage({
+                    type: GET_TABLE,
+                    payload: { table, tableData }
+                });
+                break;
+            }
+            case SET_TABLE_AT_INDEX: {
+                const { table, index, value } = payload;
+                this.csound.setTable(table, index, value);
+                break;
+            }
+            case SET_TABLE: {
+                const { table, tableData } = payload;
+                for (let i = 0; i < tableData.length; ++i) {
+                    this.csound.setTable(table, i, tableData[i]);
+                }
+                break;
+            }
+            case GET_ZERODBFS: {
+                const zeroDBFS = this.csound.getZerodBFS();
+                this.port.postMessage({
+                    type: GET_ZERODBFS,
+                    payload: zeroDBFS
+                });
+                break;
+            }
+            case GET_SCORE_TIME: {
+                const scoreTime = this.csound.getScoreTime();
+                this.port.postMessage({
+                    type: GET_SCORE_TIME,
+                    payload: scoreTime
+                });
                 break;
             }
             default: {

@@ -13,17 +13,17 @@ instr 1
     aout vco2 0.1, 440
     kphasor phasor 1
     kc invalue "channel"
-    ; outs kphasor * aout, (1 - kphasor) * aout
+    outs kphasor * aout, (1 - kphasor) * aout
     printk2 kc
-    chnset "phasor", kphasor
+    chnset kphasor,"phasor"
     kval = kphasor
     chnset  kval + 1000,"kval"
     SString = "The string"
     chnset SString, "kstring"
+    itemp ftgen 1, 0, 1025, -7, 200, 1024, 2000
+
 endin
-
-schedule(1, 0, -1)
-
+schedule(1, 0 , -1)
 </CsInstruments>
 <CsScore>
 </CsScore>

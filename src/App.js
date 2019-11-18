@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Csound from "./wasm/Csound";
 import "./App.css";
 import raw from "raw.macro";
-import { log } from "util";
 const csdFile = raw("./wasm/test.csd");
 
 const App = props => {
@@ -38,10 +37,35 @@ const App = props => {
                             const string = await csound.getStringChannel(
                                 "kstring"
                             );
-                            console.log(value, string);
+
+                            const outputs = await csound.getOutputChannelCount();
+                            const inputs = await csound.getInputChannelCount();
+                            const table = await csound.getTable(1);
+                            const zeroDBFS = await csound.getZeroDBFS();
+                            const scoreTime = await csound.getScoreTime();
+                            console.log(
+                                value,
+                                string,
+                                outputs,
+                                inputs,
+                                table,
+                                zeroDBFS,
+                                scoreTime
+                            );
                         }}
                     >
                         Get Value
+                    </button>
+                    <button
+                        onClick={async () => {
+                            csound.evaluateCode(`instr 2
+                                                    aout vco2 0.1, 440
+                                                    outs aout, aout
+                                                endin`);
+                            csound.readScore("i2 0 1");
+                        }}
+                    >
+                        Eval
                     </button>
                     <input
                         type="range"
