@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Csound from "./wasm/Csound";
+import Csound from "./bundle";
 import "./App.css";
 import raw from "raw.macro";
 const csdFile = raw("./wasm/test.csd");
@@ -10,21 +10,23 @@ const App = props => {
     useEffect(() => {
         (async () => {
             const csound = await Csound(false);
-            csound.node.connect(csound.audioContext.destination);
-            csound.enableAudioInput();
-            csound.setOutputChannelCallback(
-                "phasor",
-                value => {}
-                // console.log(value)
-            );
-            await csound.initializeMidi();
-            csound.addPlayStateListener(state => {
-                console.log(state + 1);
-            });
-            csound.addPlayStateListener(state => {
-                console.log(state + 2);
-            });
-            setCsound(csound);
+            console.log(csound);
+
+            // csound.node.connect(csound.audioContext.destination);
+            // csound.enableAudioInput();
+            // csound.setOutputChannelCallback(
+            //     "phasor",
+            //     value => {}
+            //     // console.log(value)
+            // );
+            // await csound.initializeMidi();
+            // csound.addPlayStateListener(state => {
+            //     console.log(state + 1);
+            // });
+            // csound.addPlayStateListener(state => {
+            //     console.log(state + 2);
+            // });
+            // setCsound(csound);
         })();
     }, []);
 

@@ -1,16 +1,17 @@
 {
     "name": "csound-node",
-    "version": "0.0.01",
+    "version": "0.0.3",
     "main": "dist/index.js",
     "dependencies": {
         "@babel/runtime": "^7.7.2",
-        "audioworklet-polyfill": "^1.1.2"
+        "audioworklet-polyfill": "^1.1.2",
+        "csound-node": "^0.0.2"
     },
     "scripts": {
-        "start": "HTTPS=true react-scripts start",
+        "start": "react-scripts start",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "build": "rimraf dist && NODE_ENV=production babel src/wasm/Csound.js --extensions \".js\"  --copy-files --ignore __tests__,spec.js,test.js,__snapshots__ -o dist/index.js && cp src/wasm/types.js dist/types.js"
+        "build": "NODE_ENV=production rollup -c"
     },
     "eslintConfig": {
         "extends": "react-app"
@@ -34,6 +35,10 @@
         "react": "^16.11.0",
         "react-dom": "^16.11.0",
         "react-scripts": "3.2.0",
-        "rimraf": "^3.0.0"
+        "rimraf": "^3.0.0",
+        "rollup": "^1.27.2",
+        "rollup-plugin-babel": "^4.3.3",
+        "rollup-plugin-commonjs": "^10.1.0",
+        "rollup-plugin-node-resolve": "^5.2.0"
     }
 }

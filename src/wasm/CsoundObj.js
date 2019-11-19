@@ -40,8 +40,6 @@ class CsoundObj {
 
             const _reset = CSMOD.cwrap("CsoundObj_reset", null, ["number"]);
             _reset(csObj);
-            console.log("reset?");
-
             setMidiCallbacks(csObj);
             this.setOption("-odac");
             this.setOption("-iadc");

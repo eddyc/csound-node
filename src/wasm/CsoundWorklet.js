@@ -76,8 +76,6 @@ class CsoundWorklet extends AudioWorkletProcessor {
                 break;
             }
             case RESET_CSOUND: {
-                console.log("rseet");
-
                 this.csound.reset();
                 break;
             }

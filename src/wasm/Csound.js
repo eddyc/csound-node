@@ -68,7 +68,6 @@ export default connect =>
         csoundNode.port.start();
 
         if (connect !== false) {
-            csoundNode.connect(actx.destination);
         }
         const outputChannelCallbacks = {};
         const channelCountCallbacks = {};
@@ -90,6 +89,7 @@ export default connect =>
                 });
             },
             start: () => {
+                csoundNode.connect(actx.destination);
                 if (microphoneNode) {
                     microphoneNode.connect(csoundNode);
                 }
