@@ -3,6 +3,8 @@ class CsoundObj {
     constructor(CSMOD, numberOfOutputs, numberOfInputs, sampleRate) {
         const _new = CSMOD.cwrap("CsoundObj_new", ["number"], null);
         const csObj = _new();
+        this.running = false;
+        this.started = false;
         const compileCsd = CSMOD.cwrap(
             "CsoundObj_compileCSD",
             ["number"],
@@ -32,10 +34,28 @@ class CsoundObj {
             readScore(csObj, score);
         };
 
-        const reset = CSMOD.cwrap("CsoundObj_reset", null, ["number"]);
-
         this.reset = () => {
-            reset(csObj);
+            this.started = false;
+            this.running = false;
+
+            const _reset = CSMOD.cwrap("CsoundObj_reset", null, ["number"]);
+            _reset(csObj);
+            console.log("reset?");
+
+            setMidiCallbacks(csObj);
+            this.setOption("-odac");
+            this.setOption("-iadc");
+            this.setOption("-M0");
+            this.setOption("-+rtaudio=null");
+            this.setOption("-+rtmidi=null");
+            this.setOption("--sample-rate=" + this.sampleRate);
+            this.prepareRT();
+            this.setOption("--nchnls=" + this.nchnls);
+            this.setOption("--nchnls_i=" + this.nchnls_i);
+            this.csoundOutputBuffer = null;
+            this.ksmps = null;
+            this.zerodBFS = null;
+            this.firePlayStateChange();
         };
 
         const getOutputBuffer = CSMOD.cwrap(
@@ -63,8 +83,6 @@ class CsoundObj {
         );
 
         this.getControlChannel = channel => {
-            console.log(channel);
-
             return getControlChannel(csObj, channel);
         };
 
@@ -276,6 +294,29 @@ class CsoundObj {
             setMidiCallbacks(csObj);
         };
 
+        this.getPlayState = () => {
+            if (this.running === true) {
+                return "playing";
+            } else if (this.started === true) {
+                return "paused";
+            }
+            return "stopped";
+        };
+
+        this.playStateListeners = [];
+        this.addPlayStateListener = listener => {
+            this.playStateListeners.push(listener);
+            const state = this.getPlayState();
+            listener(state, this.playStateListeners.length - 1);
+        };
+
+        this.firePlayStateChange = () => {
+            const state = this.getPlayState();
+            for (let i = 0; i < this.playStateListeners.length; ++i) {
+                this.playStateListeners[i](state, i);
+            }
+        };
+
         Object.assign(this, {
             result: 0,
             running: false,
@@ -297,7 +338,7 @@ class CsoundObj {
         this.prepareRT();
 
         this.start = () => {
-            if (this.running === false) {
+            if (this.started === false) {
                 const ksmps = this.getKsmps();
                 const outputPointer = this.getOutputBuffer();
                 const inputPointer = this.getInputBuffer();
@@ -314,12 +355,20 @@ class CsoundObj {
                     inputPointer,
                     ksmps * this.nchnls_i
                 );
-                this.running = true;
+                this.started = true;
             }
-            // this.firePlayStateChange();
+            this.firePlayStateChange();
+            this.running = true;
+        };
+
+        this.stop = () => {
+            this.running = false;
+            this.firePlayStateChange();
         };
 
         this.process = (inputs, outputs) => {
+            console.log(this.running, this.started, this.csoundOutputBuffer);
+
             if (this.csoundOutputBuffer == null || this.running === false) {
                 const output = outputs[0];
                 const bufferLen = output[0].length;
@@ -354,7 +403,8 @@ class CsoundObj {
 
                     if (result !== 0) {
                         this.running = false;
-                        // this.firePlayStateChange();
+                        this.started = false;
+                        this.firePlayStateChange();
                     }
                 }
 

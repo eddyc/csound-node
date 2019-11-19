@@ -9,14 +9,21 @@ const App = props => {
 
     useEffect(() => {
         (async () => {
-            const csound = await Csound();
+            const csound = await Csound(false);
+            csound.node.connect(csound.audioContext.destination);
+            csound.enableAudioInput();
             csound.setOutputChannelCallback(
                 "phasor",
                 value => {}
                 // console.log(value)
             );
             await csound.initializeMidi();
-
+            csound.addPlayStateListener(state => {
+                console.log(state + 1);
+            });
+            csound.addPlayStateListener(state => {
+                console.log(state + 2);
+            });
             setCsound(csound);
         })();
     }, []);
@@ -26,6 +33,8 @@ const App = props => {
             {csound && (
                 <>
                     <button onClick={() => csound.start()}>Start</button>
+                    <button onClick={() => csound.stop()}>Stop</button>
+                    <button onClick={() => csound.reset()}>Reset</button>
                     <button onClick={() => csound.compileCsd(csdFile)}>
                         Compile
                     </button>
@@ -67,6 +76,7 @@ const App = props => {
                     >
                         Eval
                     </button>
+
                     <input
                         type="range"
                         min="1"

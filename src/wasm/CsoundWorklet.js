@@ -22,6 +22,8 @@ class CsoundWorklet extends AudioWorkletProcessor {
             this.port.start();
             this.port.postMessage({ type: this.types.CSOUND_INITIALIZED });
         });
+
+        this.playStateListeners = [];
     }
 
     printMessages(e) {
@@ -34,6 +36,8 @@ class CsoundWorklet extends AudioWorkletProcessor {
         const {
             COMPILE_CSD,
             START_PERFORMANCE,
+            STOP_PERFORMANCE,
+            RESET_CSOUND,
             SET_OUTPUT_CHANNEL_CALLBACK,
             SEND_OUTPUT_CHANNEL_VALUE,
             SET_INPUT_CHANNEL_CALLBACK,
@@ -53,8 +57,11 @@ class CsoundWorklet extends AudioWorkletProcessor {
             SET_TABLE,
             GET_ZERODBFS,
             COMPILE_ORC,
-            GET_SCORE_TIME
+            GET_SCORE_TIME,
+            ADD_PLAY_STATE_LISTENER,
+            FIRE_PLAY_STATE_CHANGE
         } = this.types;
+
         switch (type) {
             case COMPILE_CSD: {
                 this.csound.compileCsd(payload);
@@ -62,6 +69,16 @@ class CsoundWorklet extends AudioWorkletProcessor {
             }
             case START_PERFORMANCE: {
                 this.csound.start();
+                break;
+            }
+            case STOP_PERFORMANCE: {
+                this.csound.stop();
+                break;
+            }
+            case RESET_CSOUND: {
+                console.log("rseet");
+
+                this.csound.reset();
                 break;
             }
             case SET_CONTROL_CHANNEL: {
@@ -191,6 +208,16 @@ class CsoundWorklet extends AudioWorkletProcessor {
                     type: GET_SCORE_TIME,
                     payload: scoreTime
                 });
+                break;
+            }
+            case ADD_PLAY_STATE_LISTENER: {
+                this.csound.addPlayStateListener((playState, index) => {
+                    this.port.postMessage({
+                        type: FIRE_PLAY_STATE_CHANGE,
+                        payload: { playState, index }
+                    });
+                });
+
                 break;
             }
             default: {

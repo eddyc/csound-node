@@ -7,6 +7,8 @@ const CsoundObj = raw("./CsoundObj.js");
 const {
     COMPILE_CSD,
     START_PERFORMANCE,
+    STOP_PERFORMANCE,
+    RESET_CSOUND,
     WRITE_TO_FS,
     UNLINK_FROM_FS,
     CSOUND_INITIALIZED,
@@ -29,10 +31,12 @@ const {
     GET_TABLE,
     SET_TABLE_AT_INDEX,
     SET_TABLE,
-    COMPILE_ORC
+    COMPILE_ORC,
+    ADD_PLAY_STATE_LISTENER,
+    FIRE_PLAY_STATE_CHANGE
 } = types;
 
-export default () =>
+export default connect =>
     new Promise(async (resolve, reject) => {
         const actx = new (window.AudioContext || window.webkitAudioContext)();
         const blob = new Blob(
@@ -57,19 +61,28 @@ export default () =>
             },
             numberOfInputs: 1,
             numberOfOutputs: 1,
-            outputChannelCount: [2]
+            outputChannelCount: [2],
+            inputChannelCount: [1]
         });
 
         csoundNode.port.start();
-        csoundNode.connect(actx.destination);
-        await actx.suspend();
+
+        if (connect !== false) {
+            csoundNode.connect(actx.destination);
+        }
         const outputChannelCallbacks = {};
         const channelCountCallbacks = {};
         const tableLengthCallbacks = {};
         const tableDataCallbacks = {};
         let scoreTimeCallbacks = {};
         let zerodBFSCallbacks = {};
+        const playStateListeners = [];
+        // const promiseResultCallbacks = {};
+
+        let microphoneNode = null;
         const csound = {
+            node: csoundNode,
+            audioContext: actx,
             compileCsd: csd => {
                 csoundNode.port.postMessage({
                     type: COMPILE_CSD,
@@ -77,9 +90,23 @@ export default () =>
                 });
             },
             start: () => {
+                if (microphoneNode) {
+                    microphoneNode.connect(csoundNode);
+                }
+
                 actx.resume();
                 csoundNode.port.postMessage({
                     type: START_PERFORMANCE
+                });
+            },
+            stop: () => {
+                csoundNode.port.postMessage({
+                    type: STOP_PERFORMANCE
+                });
+            },
+            reset: () => {
+                csoundNode.port.postMessage({
+                    type: RESET_CSOUND
                 });
             },
             writeToFs: (path, blob) => {
@@ -138,6 +165,31 @@ export default () =>
                     type: SET_INPUT_CHANNEL_VALUE,
                     payload: { name, value }
                 });
+            },
+            enableAudioInput: () => {
+                const getUserMedia =
+                    navigator.getUserMedia ||
+                    navigator.webkitGetUserMedia ||
+                    navigator.mozGetUserMedia ||
+                    null;
+
+                if (getUserMedia) {
+                    navigator.getUserMedia(
+                        {
+                            audio: true,
+                            video: false
+                        },
+                        stream => {
+                            microphoneNode = actx.createMediaStreamSource(
+                                stream
+                            );
+                            console.log("Enable Audio Input success");
+                        },
+                        () => {
+                            console.error("Enable Audio Input failed");
+                        }
+                    );
+                }
             },
             initializeMidi: () =>
                 new Promise((resolve, reject) => {
@@ -265,6 +317,14 @@ export default () =>
                     type: SET_TABLE,
                     payload: { table, tableData }
                 });
+            },
+            addPlayStateListener: listener => {
+                const listenerIndex = playStateListeners.length;
+                playStateListeners.push(listener);
+                csoundNode.port.postMessage({
+                    type: ADD_PLAY_STATE_LISTENER,
+                    payload: listenerIndex
+                });
             }
         };
 
@@ -323,6 +383,13 @@ export default () =>
                     if (scoreTimeCallbacks) {
                         const { resolve } = scoreTimeCallbacks;
                         resolve(scoreTime);
+                    }
+                    break;
+                }
+                case FIRE_PLAY_STATE_CHANGE: {
+                    const { index, playState } = payload;
+                    if (playStateListeners[index]) {
+                        playStateListeners[index](playState);
                     }
                     break;
                 }
