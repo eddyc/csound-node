@@ -365,8 +365,6 @@ class CsoundObj {
         };
 
         this.process = (inputs, outputs) => {
-            console.log(this.running, this.started, this.csoundOutputBuffer);
-
             if (this.csoundOutputBuffer == null || this.running === false) {
                 const output = outputs[0];
                 const bufferLen = output[0].length;
